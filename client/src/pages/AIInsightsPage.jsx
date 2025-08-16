@@ -22,6 +22,15 @@ const AIInsightsPage = () => {
     dispatch(fetchSpendingForecast())
   }, [dispatch])
 
+  // Debug logging
+  console.log('AI Insights Page State:', {
+    anomalies,
+    patterns,
+    recommendations,
+    forecasts,
+    isLoading
+  })
+
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Brain },
     { id: 'anomalies', label: 'Anomalies', icon: AlertTriangle },
@@ -41,8 +50,7 @@ const AIInsightsPage = () => {
           <div>
             <h3 className="text-xl font-semibold text-gray-900">AI Financial Assistant</h3>
             <p className="text-gray-600">
-              Your personal AI has analyzed {anomalies?.length || 0} spending patterns and identified 
-              {anomalies?.length || 0} anomalies to help you make better financial decisions.
+              Your personal AI has analyzed {anomalies?.length || 0} spending patterns and identified {anomalies?.length || 0} anomalies to help you make better financial decisions.
             </p>
           </div>
         </div>

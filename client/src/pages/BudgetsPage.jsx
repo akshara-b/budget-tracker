@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchBudgets, createBudget, updateBudget, deleteBudget } from '../store/slices/budgetSlice.js'
+import { fetchBudgets, fetchBudgetProgress, createBudget, updateBudget, deleteBudget } from '../store/slices/budgetSlice.js'
 import { Plus, Search, Edit, Trash2, PlusCircle, Target, Calendar, DollarSign } from 'lucide-react'
 import LoadingSpinner from '../components/common/LoadingSpinner.jsx'
 import BudgetForm from '../components/budgets/BudgetForm.jsx'
 import BudgetModal from '../components/budgets/BudgetModal.jsx'
+import { formatCurrency } from '../utils/currency.js'
 
 const BudgetsPage = () => {
   const dispatch = useDispatch()
-  const { budgets, isLoading } = useSelector((state) => state.budgets)
+  const { budgets, progress, isLoading } = useSelector((state) => state.budgets)
   
   const [showForm, setShowForm] = useState(false)
   const [selectedBudget, setSelectedBudget] = useState(null)
@@ -18,6 +19,7 @@ const BudgetsPage = () => {
 
   useEffect(() => {
     dispatch(fetchBudgets())
+    dispatch(fetchBudgetProgress())
   }, [dispatch])
 
   const handleCreateBudget = async (budgetData) => {
@@ -63,13 +65,6 @@ const BudgetsPage = () => {
     return matchesSearch && matchesCategory
   }) || []
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount)
-  }
-
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -103,7 +98,7 @@ const BudgetsPage = () => {
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="btn-primary mt-4 sm:mt-0"
+          className="btn-primary mt-4 sm:mt-0 flex items-center"
         >
           <Plus className="w-4 h-4 mr-2" />
           Create Budget
@@ -152,7 +147,17 @@ const BudgetsPage = () => {
           </div>
         ) : (
           filteredBudgets.map((budget) => {
-            const progressPercentage = getProgressPercentage(budget.spent_amount || 0, budget.budget_amount || 0)
+            // Find corresponding progress data
+            const progressData = progress?.find(p => 
+              p.budget_id === budget.id || 
+              p.category === budget.category
+            )
+            
+            // Use the correct field names
+            const budgetAmount = budget.amount || 0
+            const spentAmount = progressData?.spent_amount || 0
+            const remainingAmount = budgetAmount - spentAmount
+            const progressPercentage = budgetAmount > 0 ? (spentAmount / budgetAmount) * 100 : 0
             const progressColor = getProgressColor(progressPercentage)
             
             return (
@@ -169,7 +174,10 @@ const BudgetsPage = () => {
                   </div>
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => setSelectedBudget(budget)}
+                      onClick={() => {
+                        setSelectedBudget(budget)
+                        setShowModal(true)
+                      }}
                       className="text-indigo-600 hover:text-indigo-900 p-1"
                     >
                       <Edit className="w-4 h-4" />
@@ -187,21 +195,21 @@ const BudgetsPage = () => {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Budget Amount:</span>
                     <span className="font-semibold text-gray-900">
-                      {formatCurrency(budget.budget_amount || 0)}
+                      {formatCurrency(budgetAmount)}
                     </span>
                   </div>
                   
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Spent:</span>
                     <span className="font-semibold text-gray-900">
-                      {formatCurrency(budget.spent_amount || 0)}
+                      {formatCurrency(spentAmount)}
                     </span>
                   </div>
                   
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Remaining:</span>
-                    <span className={`font-semibold ${(budget.budget_amount || 0) - (budget.spent_amount || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      {formatCurrency((budget.budget_amount || 0) - (budget.spent_amount || 0))}
+                    <span className={`font-semibold ${remainingAmount < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {formatCurrency(remainingAmount)}
                     </span>
                   </div>
 

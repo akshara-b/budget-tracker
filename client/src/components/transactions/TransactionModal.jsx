@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { X, Save, Edit, Eye } from 'lucide-react'
+import { formatCurrency } from '../../utils/currency.js'
 
 const TransactionModal = ({ transaction, onUpdate, onClose }) => {
   const [isEditing, setIsEditing] = useState(false)
@@ -38,13 +39,6 @@ const TransactionModal = ({ transaction, onUpdate, onClose }) => {
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount)
   }
 
   const formatDate = (date) => {

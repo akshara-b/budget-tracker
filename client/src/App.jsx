@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
-import { AppDispatch, RootState } from './store/store.js'
 import { fetchCurrentUser } from './store/slices/authSlice.js'
 import { fetchTransactions } from './store/slices/transactionSlice.js'
 import { fetchBudgets } from './store/slices/budgetSlice.js'
@@ -17,7 +16,14 @@ import AIInsightsPage from './pages/AIInsightsPage.jsx'
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
-  const { user, isAuthenticated } = useSelector((state) => state.auth)
+  const { user, isAuthenticated, isLoading } = useSelector((state) => state.auth)
+  
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="text-lg">Loading...</div>
+    </div>
+  }
   
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />
@@ -40,6 +46,22 @@ const PublicRoute = ({ children }) => {
 const App = () => {
   const dispatch = useDispatch()
   const { isAuthenticated, user } = useSelector((state) => state.auth)
+  const { theme } = useSelector((state) => state.ui)
+
+  // Initialize theme on app load
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'light'
+    document.documentElement.classList.toggle('dark', savedTheme === 'dark')
+    if (savedTheme !== theme) {
+      dispatch({ type: 'ui/setTheme', payload: savedTheme })
+    }
+  }, [])
+
+  // Apply theme changes
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+    localStorage.setItem('theme', theme)
+  }, [theme])
 
   useEffect(() => {
     // Check if user is already authenticated (e.g., from localStorage)
@@ -47,7 +69,7 @@ const App = () => {
     if (token && !isAuthenticated) {
       dispatch(fetchCurrentUser())
     }
-  }, [dispatch, isAuthenticated])
+  }, [dispatch]) // Removed isAuthenticated from dependencies
 
   useEffect(() => {
     // Load initial data when user is authenticated
@@ -56,7 +78,7 @@ const App = () => {
       dispatch(fetchBudgets())
       dispatch(fetchFinancialInsights())
     }
-  }, [dispatch, isAuthenticated, user])
+  }, [dispatch, isAuthenticated, user?.id]) // Only depend on user ID, not the entire user object
 
   return (
     <Routes>

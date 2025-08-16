@@ -3,25 +3,71 @@ import { useSelector, useDispatch } from 'react-redux'
 import { fetchTransactions, fetchTransactionSummary } from '../store/slices/transactionSlice.js'
 import { fetchBudgets, fetchBudgetProgress } from '../store/slices/budgetSlice.js'
 import { fetchFinancialInsights } from '../store/slices/aiSlice.js'
+import { fetchFinancialSummary } from '../store/slices/reportSlice.js'
 import StatCard from '../components/dashboard/StatCard.jsx'
 import SpendingChart from '../components/dashboard/SpendingChart.jsx'
 import RecentTransactions from '../components/dashboard/RecentTransactions.jsx'
 import BudgetProgress from '../components/dashboard/BudgetProgress.jsx'
 import AIInsightsCard from '../components/dashboard/AIInsightsCard.jsx'
+import { formatCurrency } from '../utils/currency.js'
 
 const DashboardPage = () => {
   const dispatch = useDispatch()
-  const { summary, isLoading: transactionsLoading } = useSelector((state) => state.transactions)
-  const { progress, isLoading: budgetsLoading } = useSelector((state) => state.budgets)
-  const { insights, isLoading: aiLoading } = useSelector((state) => state.ai)
+  const { summary, isLoading: transactionsLoading, error: transactionsError } = useSelector((state) => state.transactions)
+  const { progress, isLoading: budgetsLoading, error: budgetsError } = useSelector((state) => state.budgets)
+  const { insights, isLoading: aiLoading, error: aiError } = useSelector((state) => state.ai)
+  const { financialSummary, isLoading: reportsLoading, error: reportsError } = useSelector((state) => state.reports)
 
   useEffect(() => {
+    dispatch(fetchTransactions())
     dispatch(fetchTransactionSummary())
     dispatch(fetchBudgetProgress())
     dispatch(fetchFinancialInsights())
+    dispatch(fetchFinancialSummary())
   }, [dispatch])
 
-  const isLoading = transactionsLoading || budgetsLoading || aiLoading
+  const isLoading = transactionsLoading || budgetsLoading || aiLoading || reportsLoading
+  const hasErrors = transactionsError || budgetsError || aiError || reportsError
+
+  // Debug logging
+  console.log('Dashboard State:', {
+    summary,
+    progress,
+    insights,
+    financialSummary,
+    isLoading,
+    hasErrors,
+    transactionsError,
+    budgetsError,
+    aiError,
+    reportsError
+  })
+  
+  // Additional debug for AI insights
+  console.log('Dashboard AI insights details:', insights)
+  
+  // Additional debug for progress data
+  console.log('Progress data details:', progress)
+
+  if (hasErrors) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <h3 className="text-lg font-medium text-red-800">Dashboard Errors</h3>
+          {transactionsError && <p className="text-red-700">Transactions: {transactionsError}</p>}
+          {budgetsError && <p className="text-red-700">Budgets: {budgetsError}</p>}
+          {aiError && <p className="text-red-700">AI Insights: {aiError}</p>}
+          {reportsError && <p className="text-red-700">Reports: {reportsError}</p>}
+        </div>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          Retry
+        </button>
+      </div>
+    )
+  }
 
   if (isLoading) {
     return (
@@ -47,43 +93,30 @@ const DashboardPage = () => {
         <p className="text-gray-600">Welcome back! Here's an overview of your finances.</p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="Total Income"
-          value={summary?.total_income || 0}
-          change="+12.5%"
-          changeType="positive"
-          icon="income"
-        />
-        <StatCard
-          title="Total Expenses"
-          value={summary?.total_expenses || 0}
-          change="+8.2%"
-          changeType="negative"
-          icon="expense"
-        />
-        <StatCard
-          title="Net Amount"
-          value={summary?.net_amount || 0}
-          change="+15.3%"
-          changeType="positive"
-          icon="net"
-        />
-        <StatCard
-          title="Transactions"
-          value={summary?.transaction_count || 0}
-          change="+5.1%"
-          changeType="positive"
-          icon="transaction"
-        />
-      </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium">Total Income</h3>
+            <p className="text-2xl font-bold">{formatCurrency(summary?.total_income || 0)}</p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium">Total Expenses</h3>
+            <p className="text-2xl font-bold">{formatCurrency(summary?.total_expenses || 0)}</p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium">Net Amount</h3>
+            <p className="text-2xl font-bold">{formatCurrency(summary?.net_balance || 0)}</p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium">Transactions</h3>
+            <p className="text-2xl font-bold">{summary?.transaction_count || 0}</p>
+          </div>
+        </div>
 
-      {/* Charts and Data */}
+        {/* Charts and Data */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Spending Overview</h3>
-          <SpendingChart />
+          <SpendingChart monthlyData={financialSummary?.monthly_trends || []} />
         </div>
         
         <div className="card">

@@ -12,17 +12,17 @@ export const aiService = {
   },
 
   async getSpendingPatterns(params = {}) {
-    const response = await api.get('/ai/patterns', { params })
+    const response = await api.get('/ai/spending-patterns', { params })
     return response.data
   },
 
   async getBudgetRecommendations(params = {}) {
-    const response = await api.get('/ai/recommendations', { params })
+    const response = await api.get('/ai/budget-recommendations', { params })
     return response.data
   },
 
   async getSpendingForecast(params = {}) {
-    const response = await api.get('/ai/forecast', { params })
+    const response = await api.get('/ai/predictions/spending-forecast', { params })
     return response.data
   },
 
@@ -54,5 +54,29 @@ export const aiService = {
   async getSavingsSuggestions(params = {}) {
     const response = await api.get('/ai/savings-suggestions', { params })
     return response.data
+  },
+
+  // New method for getting comprehensive AI insights
+  async getComprehensiveInsights(params = {}) {
+    try {
+      const [insights, anomalies, patterns, recommendations, forecasts] = await Promise.allSettled([
+        this.getFinancialInsights(params),
+        this.getAnomalies(params),
+        this.getSpendingPatterns(params),
+        this.getBudgetRecommendations(params),
+        this.getSpendingForecast(params)
+      ])
+
+      return {
+        insights: insights.status === 'fulfilled' ? insights.value : [],
+        anomalies: anomalies.status === 'fulfilled' ? anomalies.value : [],
+        patterns: patterns.status === 'fulfilled' ? patterns.value : [],
+        recommendations: recommendations.status === 'fulfilled' ? recommendations.value : [],
+        forecasts: forecasts.status === 'fulfilled' ? forecasts.value : []
+      }
+    } catch (error) {
+      console.error('Error fetching comprehensive insights:', error)
+      throw error
+    }
   }
 }

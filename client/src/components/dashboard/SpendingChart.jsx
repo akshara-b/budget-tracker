@@ -1,28 +1,38 @@
 import React from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { formatCurrency } from '../../utils/currency.js'
 
-const SpendingChart = () => {
-  // Sample data - in a real app, this would come from props or API
-  const data = [
-    { month: 'Jan', income: 4000, expenses: 2400 },
-    { month: 'Feb', income: 3000, expenses: 1398 },
-    { month: 'Mar', income: 2000, expenses: 9800 },
-    { month: 'Apr', income: 2780, expenses: 3908 },
-    { month: 'May', income: 1890, expenses: 4800 },
-    { month: 'Jun', income: 2390, expenses: 3800 },
-  ]
+const SpendingChart = ({ monthlyData = [] }) => {
+  // Transform the data to match the chart format
+  const formatDataForChart = (data) => {
+    if (!data || data.length === 0) {
+      // Fallback data if no real data is available
+      return [
+        { month: 'No Data', income: 0, expenses: 0 }
+      ]
+    }
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value)
+    return data.map(item => {
+      // Parse the month string (e.g., "2024-01" -> "Jan 2024")
+      const [year, monthNum] = item.month.split('-')
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+      const monthName = monthNames[parseInt(monthNum) - 1]
+      
+      return {
+        month: `${monthName} ${year}`,
+        income: item.income,
+        expenses: item.expenses
+      }
+    })
   }
+
+  const chartData = formatDataForChart(monthlyData)
 
   return (
     <div className="w-full h-80">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data}>
+        <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="month" />
           <YAxis />

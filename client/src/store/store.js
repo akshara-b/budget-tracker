@@ -4,6 +4,7 @@ import transactionReducer from './slices/transactionSlice.js'
 import budgetReducer from './slices/budgetSlice.js'
 import aiReducer from './slices/aiSlice.js'
 import uiReducer from './slices/uiSlice.js'
+import reportReducer from './slices/reportSlice.js'
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     budgets: budgetReducer,
     ai: aiReducer,
     ui: uiReducer,
+    reports: reportReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

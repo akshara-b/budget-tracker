@@ -1,7 +1,9 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { NavLink, useLocation } from 'react-router-dom'
 import { setSidebarOpen } from '../../store/slices/uiSlice.js'
+import { fetchTransactionSummary } from '../../store/slices/transactionSlice.js'
+import { formatCurrency } from '../../utils/currency.js'
 import { 
   Home, 
   CreditCard, 
@@ -18,7 +20,15 @@ import {
 const Sidebar = () => {
   const dispatch = useDispatch()
   const { sidebarOpen } = useSelector((state) => state.ui)
+  const { summary } = useSelector((state) => state.transactions)
   const location = useLocation()
+
+  // Fetch transaction summary for quick stats
+  useEffect(() => {
+    if (!summary) {
+      dispatch(fetchTransactionSummary())
+    }
+  }, [dispatch, summary])
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
@@ -96,19 +106,19 @@ const Sidebar = () => {
               <div className="px-3 py-2 bg-green-50 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <TrendingUp className="w-4 h-4 text-green-600" />
-                  <span className="text-sm text-green-700">Income: $2,450</span>
+                  <span className="text-sm text-green-700">Income: {formatCurrency(summary?.total_income)}</span>
                 </div>
               </div>
               <div className="px-3 py-2 bg-red-50 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <TrendingDown className="w-4 h-4 text-red-600" />
-                  <span className="text-sm text-red-700">Expenses: $1,890</span>
+                  <span className="text-sm text-red-700">Expenses: {formatCurrency(summary?.total_expenses)}</span>
                 </div>
               </div>
               <div className="px-3 py-2 bg-blue-50 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <PieChart className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm text-blue-700">Net: $560</span>
+                  <span className="text-sm text-blue-700">Net: {formatCurrency(summary?.net_balance)}</span>
                 </div>
               </div>
             </div>

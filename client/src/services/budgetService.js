@@ -2,7 +2,7 @@ import api from './api.js'
 
 export const budgetService = {
   async getBudgets(params = {}) {
-    const response = await api.get('/budgets', { params })
+    const response = await api.get('/budgets/', { params })
     return response.data
   },
 
@@ -12,7 +12,7 @@ export const budgetService = {
   },
 
   async createBudget(budgetData) {
-    const response = await api.post('/budgets', budgetData)
+    const response = await api.post('/budgets/', budgetData)
     return response.data
   },
 
@@ -27,7 +27,7 @@ export const budgetService = {
   },
 
   async getBudgetProgress(params = {}) {
-    const response = await api.get('/budgets/progress', { params })
+    const response = await api.get('/budgets/progress/overview', { params })
     return response.data
   },
 

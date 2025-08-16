@@ -89,6 +89,115 @@ async def get_budgets(
     
     return budgets
 
+@router.get("/progress/overview", response_model=List[BudgetProgress])
+async def get_budget_progress(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncIOMotorClient = Depends(get_database)
+):
+    # Get all budgets for the user
+    budgets = await db.budgets.find({"user_id": str(current_user["_id"])}).to_list(None)
+    
+    budget_progress = []
+    
+    for budget in budgets:
+        # Calculate spent amount for this budget category
+        pipeline = [
+            {"$match": {
+                "user_id": str(current_user["_id"]),
+                "category": budget["category"],
+                "transaction_type": "expense",
+                "date": {"$gte": budget["start_date"]}
+            }},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]
+        
+        # Debug: Count all transactions for this category (without date filter)
+        all_transactions_count = await db.transactions.count_documents({
+            "user_id": str(current_user["_id"]),
+            "category": budget["category"],
+            "transaction_type": "expense"
+        })
+        
+        # Debug: Count transactions within date range
+        filtered_transactions_count = await db.transactions.count_documents({
+            "user_id": str(current_user["_id"]),
+            "category": budget["category"],
+            "transaction_type": "expense",
+            "date": {"$gte": budget["start_date"]}
+        })
+        
+        print(f"Budget debug - Category: {budget['category']}")
+        print(f"  - Start date: {budget['start_date']}")
+        print(f"  - All transactions: {all_transactions_count}")
+        print(f"  - Filtered transactions: {filtered_transactions_count}")
+        
+        result = await db.transactions.aggregate(pipeline).to_list(None)
+        spent_amount = result[0]["total"] if result else 0.0
+        
+        print(f"  - Spent amount: {spent_amount}")
+        
+        progress_percentage = (spent_amount / budget["amount"]) * 100 if budget["amount"] > 0 else 0
+        is_over_budget = spent_amount > budget["amount"]
+        
+        budget_progress.append(BudgetProgress(
+            budget_id=str(budget["_id"]),
+            budget_name=budget["name"],
+            category=budget["category"],
+            budget_amount=budget["amount"],
+            spent_amount=spent_amount,
+            remaining_amount=budget["amount"] - spent_amount,
+            progress_percentage=progress_percentage,
+            is_over_budget=is_over_budget
+        ))
+    
+    return budget_progress
+
+@router.get("/progress/{budget_id}", response_model=BudgetProgress)
+async def get_specific_budget_progress(
+    budget_id: str,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncIOMotorClient = Depends(get_database)
+):
+    # Get the specific budget
+    budget = await db.budgets.find_one({
+        "_id": ObjectId(budget_id),
+        "user_id": str(current_user["_id"])
+    })
+    
+    if not budget:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Budget not found"
+        )
+    
+    # Calculate spent amount for this budget category
+    pipeline = [
+        {"$match": {
+            "user_id": str(current_user["_id"]),
+            "category": budget["category"],
+            "transaction_type": "expense",
+            "date": {"$gte": budget["start_date"]}
+        }},
+        {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+    ]
+    
+    result = await db.transactions.aggregate(pipeline).to_list(None)
+    spent_amount = result[0]["total"] if result else 0.0
+    
+    progress_percentage = (spent_amount / budget["amount"]) * 100 if budget["amount"] > 0 else 0
+    is_over_budget = spent_amount > budget["amount"]
+    
+    return BudgetProgress(
+        budget_id=str(budget["_id"]),
+        budget_name=budget["name"],
+        category=budget["category"],
+        budget_amount=budget["amount"],
+        spent_amount=spent_amount,
+        remaining_amount=budget["amount"] - spent_amount,
+        progress_percentage=progress_percentage,
+        is_over_budget=is_over_budget
+    )
+
 @router.get("/{budget_id}", response_model=BudgetResponse)
 async def get_budget(
     budget_id: str,
@@ -176,92 +285,3 @@ async def delete_budget(
         )
     
     return {"message": "Budget deleted successfully"}
-
-@router.get("/progress/overview", response_model=List[BudgetProgress])
-async def get_budget_progress(
-    current_user: dict = Depends(get_current_user),
-    db: AsyncIOMotorClient = Depends(get_database)
-):
-    # Get all budgets for the user
-    budgets = await db.budgets.find({"user_id": str(current_user["_id"])}).to_list(None)
-    
-    budget_progress = []
-    
-    for budget in budgets:
-        # Calculate spent amount for this budget category
-        pipeline = [
-            {"$match": {
-                "user_id": str(current_user["_id"]),
-                "category": budget["category"],
-                "transaction_type": "expense",
-                "date": {"$gte": budget["start_date"]}
-            }},
-            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
-        ]
-        
-        spent_result = await db.transactions.aggregate(pipeline).to_list(None)
-        spent_amount = spent_result[0]["total"] if spent_result else 0
-        
-        remaining_amount = budget["amount"] - spent_amount
-        progress_percentage = (spent_amount / budget["amount"]) * 100 if budget["amount"] > 0 else 0
-        is_over_budget = spent_amount > budget["amount"]
-        
-        budget_progress.append(BudgetProgress(
-            budget_id=str(budget["_id"]),
-            budget_name=budget["name"],
-            category=budget["category"],
-            budget_amount=budget["amount"],
-            spent_amount=spent_amount,
-            remaining_amount=remaining_amount,
-            progress_percentage=progress_percentage,
-            is_over_budget=is_over_budget
-        ))
-    
-    return budget_progress
-
-@router.get("/progress/{budget_id}", response_model=BudgetProgress)
-async def get_specific_budget_progress(
-    budget_id: str,
-    current_user: dict = Depends(get_current_user),
-    db: AsyncIOMotorClient = Depends(get_database)
-):
-    # Get the specific budget
-    budget = await db.budgets.find_one({
-        "_id": ObjectId(budget_id),
-        "user_id": str(current_user["_id"])
-    })
-    
-    if not budget:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Budget not found"
-        )
-    
-    # Calculate spent amount for this budget
-    pipeline = [
-        {"$match": {
-            "user_id": str(current_user["_id"]),
-            "category": budget["category"],
-            "transaction_type": "expense",
-            "date": {"$gte": budget["start_date"]}
-        }},
-        {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
-    ]
-    
-    spent_result = await db.transactions.aggregate(pipeline).to_list(None)
-    spent_amount = spent_result[0]["total"] if spent_result else 0
-    
-    remaining_amount = budget["amount"] - spent_amount
-    progress_percentage = (spent_amount / budget["amount"]) * 100 if budget["amount"] > 0 else 0
-    is_over_budget = spent_amount > budget["amount"]
-    
-    return BudgetProgress(
-        budget_id=str(budget["_id"]),
-        budget_name=budget["name"],
-        category=budget["category"],
-        budget_amount=budget["amount"],
-        spent_amount=spent_amount,
-        remaining_amount=remaining_amount,
-        progress_percentage=progress_percentage,
-        is_over_budget=is_over_budget
-    )

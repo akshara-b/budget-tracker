@@ -2,21 +2,10 @@ import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchBudgetProgress } from '../../store/slices/budgetSlice.js'
 import { Target, TrendingUp, TrendingDown } from 'lucide-react'
+import { formatCurrency } from '../../utils/currency.js'
 
 const BudgetProgress = () => {
-  const dispatch = useDispatch()
   const { progress } = useSelector((state) => state.budgets)
-
-  useEffect(() => {
-    dispatch(fetchBudgetProgress())
-  }, [dispatch])
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount)
-  }
 
   const getProgressPercentage = (spent, limit) => {
     if (!limit || limit === 0) return 0
@@ -48,12 +37,16 @@ const BudgetProgress = () => {
   return (
     <div className="space-y-4">
       {progress.map((budget) => {
-        const progressPercentage = getProgressPercentage(budget.spent_amount || 0, budget.budget_amount || 0)
+        // More defensive data access
+        const budgetAmount = budget.budget_amount || budget.amount || 0
+        const spentAmount = budget.spent_amount || budget.spent || 0
+        
+        const progressPercentage = getProgressPercentage(spentAmount, budgetAmount)
         const progressColor = getProgressColor(progressPercentage)
         const progressTextColor = getProgressTextColor(progressPercentage)
         
         return (
-          <div key={budget.id || budget._id} className="space-y-2">
+          <div key={budget.budget_id || budget.id || budget._id} className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Target className="w-4 h-4 text-blue-600" />
@@ -72,14 +65,14 @@ const BudgetProgress = () => {
             </div>
             
             <div className="flex items-center justify-between text-xs text-gray-600">
-              <span>Spent: {formatCurrency(budget.spent_amount || 0)}</span>
-              <span>Budget: {formatCurrency(budget.budget_amount || 0)}</span>
+              <span>Spent: {formatCurrency(spentAmount)}</span>
+              <span>Budget: {formatCurrency(budgetAmount)}</span>
             </div>
             
             {progressPercentage > 100 && (
               <div className="flex items-center space-x-1 text-red-600 text-xs">
                 <TrendingUp className="w-3 h-3" />
-                <span>Over budget by {formatCurrency((budget.spent_amount || 0) - (budget.budget_amount || 0))}</span>
+                <span>Over budget by {formatCurrency(spentAmount - budgetAmount)}</span>
               </div>
             )}
             

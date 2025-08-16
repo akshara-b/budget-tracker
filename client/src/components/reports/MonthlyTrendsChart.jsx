@@ -1,24 +1,17 @@
 import React from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts'
+import { formatCurrency, formatCurrencyCompact } from '../../utils/currency.js'
 
-const MonthlyTrendsChart = () => {
-  // Sample data for the chart (in a real app, this would come from the API)
-  const data = [
-    { month: 'Jan', income: 3000, expenses: 1200, savings: 1800 },
-    { month: 'Feb', income: 3200, expenses: 1100, savings: 2100 },
-    { month: 'Mar', income: 3100, expenses: 1400, savings: 1700 },
-    { month: 'Apr', income: 3300, expenses: 1300, savings: 2000 },
-    { month: 'May', income: 3400, expenses: 1600, savings: 1800 },
-    { month: 'Jun', income: 3500, expenses: 1500, savings: 2000 },
+const MonthlyTrendsChart = ({ data = [], chartType = 'bar' }) => {
+  // Transform the data or provide fallback
+  const chartData = data.length > 0 ? data.map(item => ({
+    month: item.month,
+    income: item.income,
+    expenses: item.expense || item.expenses,
+    savings: item.income - (item.expense || item.expenses || 0)
+  })) : [
+    { month: 'No Data', income: 0, expenses: 0, savings: 0 }
   ]
-
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-    }).format(value)
-  }
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -39,13 +32,14 @@ const MonthlyTrendsChart = () => {
   return (
     <div className="h-80">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data}>
+        <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
           <XAxis dataKey="month" stroke="#6B7280" fontSize={12} />
-          <YAxis stroke="#6B7280" fontSize={12} tickFormatter={formatCurrency} />
+          <YAxis stroke="#6B7280" fontSize={12} tickFormatter={formatCurrencyCompact} />
           <Tooltip content={<CustomTooltip />} />
           <Bar dataKey="income" fill="#10B981" name="Income" />
           <Bar dataKey="expenses" fill="#EF4444" name="Expenses" />
+          <Bar dataKey="savings" fill="#3B82F6" name="Savings" />
         </BarChart>
       </ResponsiveContainer>
     </div>

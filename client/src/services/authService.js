@@ -2,7 +2,16 @@ import api from './api.js'
 
 export const authService = {
   async login(credentials) {
-    const response = await api.post('/auth/login', credentials)
+    // Convert to FormData for OAuth2PasswordRequestForm compatibility
+    const formData = new FormData()
+    formData.append('username', credentials.email) // Backend expects username but we use email
+    formData.append('password', credentials.password)
+    
+    const response = await api.post('/auth/login', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
     return response.data
   },
 

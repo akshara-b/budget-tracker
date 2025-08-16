@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from typing import Optional
+from typing import Optional, Union
 import os
 
 class Settings(BaseSettings):
@@ -17,11 +17,17 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Budget AI API"
     
     # CORS settings
-    BACKEND_CORS_ORIGINS: list = ["http://localhost:3000", "http://localhost:5173"]
+    BACKEND_CORS_ORIGINS: Union[str, list] = ["http://localhost:3000", "http://localhost:5173"]
     
     # Environment
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Parse CORS origins from string if needed
+        if isinstance(self.BACKEND_CORS_ORIGINS, str):
+            self.BACKEND_CORS_ORIGINS = [origin.strip() for origin in self.BACKEND_CORS_ORIGINS.split(",")]
     
     class Config:
         env_file = ".env"

@@ -2,7 +2,7 @@ import api from './api.js'
 
 export const transactionService = {
   async getTransactions(params = {}) {
-    const response = await api.get('/transactions', { params })
+    const response = await api.get('/transactions/', { params })
     return response.data
   },
 
@@ -12,7 +12,7 @@ export const transactionService = {
   },
 
   async createTransaction(transactionData) {
-    const response = await api.post('/transactions', transactionData)
+    const response = await api.post('/transactions/', transactionData)
     return response.data
   },
 
@@ -27,7 +27,7 @@ export const transactionService = {
   },
 
   async getTransactionSummary(params = {}) {
-    const response = await api.get('/transactions/summary', { params })
+    const response = await api.get('/transactions/summary/overview', { params })
     return response.data
   },
 
