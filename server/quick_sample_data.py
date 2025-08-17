@@ -11,8 +11,8 @@ import random
 # Hardcoded user option - set USE_HARDCODED_USER to True to use specific user
 USE_HARDCODED_USER = True
 HARDCODED_USER = {
-    "email": "kris123@gmail.com",
-    "name": "Krisvsnth"
+    "email": "",
+    "name": ""
 }
 
 async def create_sample_user_and_data():

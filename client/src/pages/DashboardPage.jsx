@@ -158,7 +158,7 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      {/* Charts and Data */}
+        {/* Charts and Data */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card-gradient">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">

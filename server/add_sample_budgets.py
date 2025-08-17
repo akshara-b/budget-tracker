@@ -9,8 +9,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 # Hardcoded user option - set USE_HARDCODED_USER to True to use specific user
 USE_HARDCODED_USER = True
 HARDCODED_USER = {
-    "email": "krishprasath10@gmail.com",
-    "name": "Kris Test"
+    "email": "",
+    "name": ""
 }
 
 async def add_sample_budgets():
