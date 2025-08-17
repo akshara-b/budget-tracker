@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
-import { AppDispatch, RootState } from './store/store.js'
 import { fetchCurrentUser } from './store/slices/authSlice.js'
 import { fetchTransactions } from './store/slices/transactionSlice.js'
 import { fetchBudgets } from './store/slices/budgetSlice.js'
@@ -17,7 +16,14 @@ import AIInsightsPage from './pages/AIInsightsPage.jsx'
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
-  const { user, isAuthenticated } = useSelector((state) => state.auth)
+  const { user, isAuthenticated, isLoading } = useSelector((state) => state.auth)
+  
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="text-lg">Loading...</div>
+    </div>
+  }
   
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />
@@ -56,7 +62,7 @@ const App = () => {
       dispatch(fetchBudgets())
       dispatch(fetchFinancialInsights())
     }
-  }, [dispatch, isAuthenticated, user])
+  }, [dispatch, isAuthenticated, user?.id]) // Only depend on user ID, not the entire user object
 
   return (
     <Routes>

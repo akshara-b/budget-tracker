@@ -1,31 +1,27 @@
 import React from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
+import { formatCurrency } from '../../utils/currency.js'
 
-const SpendingByCategoryChart = () => {
-  // Sample data for the chart (in a real app, this would come from the API)
-  const data = [
-    { name: 'Food & Dining', value: 35, color: '#3B82F6' },
-    { name: 'Transportation', value: 25, color: '#10B981' },
-    { name: 'Entertainment', value: 20, color: '#F59E0B' },
-    { name: 'Shopping', value: 15, color: '#EF4444' },
-    { name: 'Healthcare', value: 5, color: '#8B5CF6' },
+const SpendingByCategoryChart = ({ data = [] }) => {
+  // Transform transaction data into chart format
+  const chartData = data.length > 0 ? data.map((category, index) => ({
+    name: category.name,
+    value: category.expense,
+    color: COLORS[index % COLORS.length]
+  })).filter(item => item.value > 0) : [
+    { name: 'No Data', value: 100, color: '#E5E7EB' }
   ]
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-    }).format(value)
-  }
+  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316']
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
+      const data = payload[0].payload
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-medium text-gray-900">{payload[0].name}</p>
+          <p className="font-medium text-gray-900">{data.name}</p>
           <p className="text-sm text-gray-600">
-            {payload[0].value}% of total spending
+            {formatCurrency(data.value)}
           </p>
         </div>
       )
@@ -38,7 +34,7 @@ const SpendingByCategoryChart = () => {
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
-            data={data}
+            data={chartData}
             cx="50%"
             cy="50%"
             innerRadius={60}
@@ -46,7 +42,7 @@ const SpendingByCategoryChart = () => {
             paddingAngle={2}
             dataKey="value"
           >
-            {data.map((entry, index) => (
+            {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Pie>

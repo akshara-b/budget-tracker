@@ -466,8 +466,3 @@ Hover States:
 ```
 
 ---
-
-**Wireframe Version**: 1.0  
-**Last Updated**: December 2024  
-**Design System**: Modern, Clean, Responsive  
-**Accessibility**: WCAG 2.1 AA Compliant

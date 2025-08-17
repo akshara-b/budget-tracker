@@ -5,6 +5,7 @@ import { Plus, Search, Filter, Edit, Trash2, Eye, PlusCircle } from 'lucide-reac
 import LoadingSpinner from '../components/common/LoadingSpinner.jsx'
 import TransactionForm from '../components/transactions/TransactionForm.jsx'
 import TransactionModal from '../components/transactions/TransactionModal.jsx'
+import { formatCurrency } from '../utils/currency.js'
 
 const TransactionsPage = () => {
   const dispatch = useDispatch()
@@ -65,13 +66,6 @@ const TransactionsPage = () => {
     return matchesSearch && matchesType && matchesCategory
   }) || []
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount)
-  }
-
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -102,7 +96,7 @@ const TransactionsPage = () => {
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="btn-primary mt-4 sm:mt-0"
+          className="btn-primary mt-4 sm:mt-0 flex items-center"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Transaction

@@ -2,23 +2,12 @@ import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchTransactions } from '../../store/slices/transactionSlice.js'
 import { ArrowUpRight, ArrowDownLeft, Eye } from 'lucide-react'
+import { formatCurrency } from '../../utils/currency.js'
 
 const RecentTransactions = () => {
-  const dispatch = useDispatch()
   const { transactions } = useSelector((state) => state.transactions)
 
-  useEffect(() => {
-    dispatch(fetchTransactions())
-  }, [dispatch])
-
   const recentTransactions = transactions?.slice(0, 5) || []
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount)
-  }
 
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('en-US', {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { X, Save, Edit, Target, Calendar, DollarSign } from 'lucide-react'
+import { X, Save, Edit, Target, Calendar, Coins } from 'lucide-react'
+import { formatCurrency } from '../../utils/currency.js'
 
 const BudgetModal = ({ budget, onUpdate, onClose }) => {
   const [isEditing, setIsEditing] = useState(false)
@@ -9,7 +10,7 @@ const BudgetModal = ({ budget, onUpdate, onClose }) => {
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
       category: budget.category,
-      limit: budget.limit,
+      amount: budget.amount,
       period: budget.period,
       description: budget.description || ''
     }
@@ -37,19 +38,12 @@ const BudgetModal = ({ budget, onUpdate, onClose }) => {
   const handleFormSubmit = async (data) => {
     setIsSubmitting(true)
     try {
-      await onUpdate(budget._id, data)
+      await onUpdate(budget.id, data)
     } catch (error) {
       console.error('Update error:', error)
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount)
   }
 
   const getProgressPercentage = (spent, limit) => {
@@ -75,12 +69,12 @@ const BudgetModal = ({ budget, onUpdate, onClose }) => {
     return 'On Track'
   }
 
-  const percentage = getProgressPercentage(budget.spent || 0, budget.limit)
-  const remaining = budget.limit - (budget.spent || 0)
+  const percentage = getProgressPercentage(budget.spent || 0, budget.amount)
+  const remaining = budget.amount - (budget.spent || 0)
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/20 flex items-start justify-center z-[9999] p-4 pt-8 overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-y-auto border border-gray-200">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
@@ -127,22 +121,22 @@ const BudgetModal = ({ budget, onUpdate, onClose }) => {
               )}
             </div>
 
-            {/* Limit */}
+            {/* Amount */}
             <div>
-              <label className="form-label">Budget Limit *</label>
+              <label className="form-label">Budget Amount *</label>
               <input
                 type="number"
                 step="0.01"
                 min="0"
-                {...register('limit', { 
-                  required: 'Budget limit is required',
-                  min: { value: 0.01, message: 'Budget limit must be greater than 0' }
+                {...register('amount', { 
+                  required: 'Budget amount is required',
+                  min: { value: 0.01, message: 'Budget amount must be greater than 0' }
                 })}
-                className={`input-field ${errors.limit ? 'border-red-500' : ''}`}
+                className={`input-field ${errors.amount ? 'border-red-500' : ''}`}
                 placeholder="0.00"
               />
-              {errors.limit && (
-                <p className="text-red-500 text-sm mt-1">{errors.limit.message}</p>
+              {errors.amount && (
+                <p className="text-red-500 text-sm mt-1">{errors.amount.message}</p>
               )}
             </div>
 
@@ -219,10 +213,10 @@ const BudgetModal = ({ budget, onUpdate, onClose }) => {
             <div className="space-y-3">
               <div className="flex justify-between py-2 border-b border-gray-100">
                 <span className="text-gray-600 flex items-center">
-                  <DollarSign className="w-4 h-4 mr-2" />
-                  Limit
+                  <Coins className="w-4 h-4 mr-2" />
+                  Amount
                 </span>
-                <span className="font-medium">{formatCurrency(budget.limit)}</span>
+                <span className="font-medium">{formatCurrency(budget.amount)}</span>
               </div>
               
               <div className="flex justify-between py-2 border-b border-gray-100">
@@ -249,7 +243,7 @@ const BudgetModal = ({ budget, onUpdate, onClose }) => {
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
                   className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(percentage)}`}
-                  style={{ width: `${percentage}%` }}
+                  style={{ width: `${Math.min(percentage, 100)}%` }}
                 />
               </div>
               <p className="text-xs text-gray-500 text-center">

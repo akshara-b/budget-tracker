@@ -140,7 +140,12 @@ const aiSlice = createSlice({
       })
       .addCase(fetchSpendingForecast.fulfilled, (state, action) => {
         state.isLoading = false
-        state.forecasts = action.payload
+        // Handle the forecast response structure
+        if (action.payload && action.payload.predictions) {
+          state.forecasts = action.payload.predictions
+        } else {
+          state.forecasts = action.payload || []
+        }
       })
       .addCase(fetchSpendingForecast.rejected, (state, action) => {
         state.isLoading = false

@@ -3,8 +3,9 @@ import { useSelector, useDispatch } from 'react-redux'
 import { fetchTransactions } from '../store/slices/transactionSlice.js'
 import { fetchBudgets } from '../store/slices/budgetSlice.js'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts'
-import { Download, Calendar, TrendingUp, TrendingDown, DollarSign, PieChart as PieChartIcon, BarChart3, LineChart as LineChartIcon } from 'lucide-react'
+import { Download, Calendar, TrendingUp, TrendingDown, Coins, PieChart as PieChartIcon, BarChart3, LineChart as LineChartIcon } from 'lucide-react'
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns'
+import { formatCurrency } from '../utils/currency.js'
 
 const ReportsPage = () => {
   const dispatch = useDispatch()
@@ -137,7 +138,7 @@ const ReportsPage = () => {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
-              <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
+              <Tooltip formatter={(value) => formatCurrency(value)} />
               <Legend />
               <Bar dataKey="income" fill="#10B981" name="Income" />
               <Bar dataKey="expense" fill="#EF4444" name="Expense" />
@@ -163,7 +164,7 @@ const ReportsPage = () => {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
+              <Tooltip formatter={(value) => formatCurrency(value)} />
             </PieChart>
           </ResponsiveContainer>
         )
@@ -175,7 +176,7 @@ const ReportsPage = () => {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />
-              <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
+              <Tooltip formatter={(value) => formatCurrency(value)} />
               <Legend />
               <Line type="monotone" dataKey="income" stroke="#10B981" name="Income" strokeWidth={2} />
               <Line type="monotone" dataKey="expense" stroke="#EF4444" name="Expense" strokeWidth={2} />
@@ -215,7 +216,7 @@ const ReportsPage = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Income</p>
               <p className="text-2xl font-bold text-green-600">
-                ${totalIncome.toFixed(2)}
+                {formatCurrency(totalIncome)}
               </p>
             </div>
           </div>
@@ -229,7 +230,7 @@ const ReportsPage = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Expenses</p>
               <p className="text-2xl font-bold text-red-600">
-                ${totalExpenses.toFixed(2)}
+                {formatCurrency(totalExpenses)}
               </p>
             </div>
           </div>
@@ -238,12 +239,12 @@ const ReportsPage = () => {
         <div className="card">
           <div className="flex items-center">
             <div className="p-3 bg-blue-100 rounded-lg">
-              <DollarSign className="w-6 h-6 text-blue-600" />
+              <Coins className="w-6 h-6 text-blue-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Net Amount</p>
               <p className={`text-2xl font-bold ${netAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                ${netAmount.toFixed(2)}
+                {formatCurrency(netAmount)}
               </p>
             </div>
           </div>
@@ -326,15 +327,15 @@ const ReportsPage = () => {
                     {category.name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-green-600">
-                    ${category.income.toFixed(2)}
+                    {formatCurrency(category.income)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-red-600">
-                    ${category.expense.toFixed(2)}
+                    {formatCurrency(category.expense)}
                   </td>
                   <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-medium ${
                     category.net >= 0 ? 'text-green-600' : 'text-red-600'
                   }`}>
-                    ${category.net.toFixed(2)}
+                    {formatCurrency(category.net)}
                   </td>
                 </tr>
               ))}

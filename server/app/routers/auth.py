@@ -72,7 +72,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncIOMotor
     return user
 
 # Routes
-@router.post("/register", response_model=UserResponse)
+@router.post("/register", response_model=Token)
 async def register(user_data: UserCreate, db: AsyncIOMotorClient = Depends(get_database)):
     # Check if user already exists
     existing_user = await db.users.find_one({"$or": [{"username": user_data.username}, {"email": user_data.email}]})
@@ -95,11 +95,23 @@ async def register(user_data: UserCreate, db: AsyncIOMotorClient = Depends(get_d
     result = await db.users.insert_one(user_doc)
     user_doc["id"] = str(result.inserted_id)
     
-    return UserResponse(**user_doc)
+    # Create access token for automatic login
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user_data.username}, expires_delta=access_token_expires
+    )
+    
+    return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/login", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncIOMotorClient = Depends(get_database)):
-    user = await db.users.find_one({"username": form_data.username})
+    # Check by username or email
+    user = await db.users.find_one({
+        "$or": [
+            {"username": form_data.username},
+            {"email": form_data.username}  # Allow login with email
+        ]
+    })
     if not user or not verify_password(form_data.password, user["hashed_password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -116,4 +128,12 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncIOMot
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):
-    return UserResponse(**current_user)
+    # Transform MongoDB document to UserResponse format
+    user_data = {
+        "id": str(current_user["_id"]),
+        "username": current_user["username"],
+        "email": current_user["email"],
+        "full_name": current_user["full_name"],
+        "created_at": current_user["created_at"]
+    }
+    return UserResponse(**user_data)

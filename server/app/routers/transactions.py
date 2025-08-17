@@ -34,7 +34,7 @@ class TransactionResponse(BaseModel):
     category: str
     transaction_type: str
     date: datetime
-    tags: List[str]
+    tags: List[str] = []
     created_at: datetime
     updated_at: datetime
 
@@ -96,6 +96,46 @@ async def get_transactions(
         transactions.append(TransactionResponse(**document))
     
     return transactions
+
+@router.get("/summary/overview")
+async def get_transaction_summary(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncIOMotorClient = Depends(get_database)
+):
+    pipeline = [
+        {"$match": {"user_id": str(current_user["_id"])}},
+        {"$group": {
+            "_id": "$transaction_type",
+            "total": {"$sum": "$amount"},
+            "count": {"$sum": 1}
+        }}
+    ]
+    
+    result = await db.transactions.aggregate(pipeline).to_list(None)
+    
+    summary = {
+        "total_income": 0,
+        "total_expenses": 0,
+        "income_count": 0,
+        "expense_count": 0,
+        "net_balance": 0,
+        "net_amount": 0,
+        "transaction_count": 0
+    }
+    
+    for item in result:
+        if item["_id"] == "income":
+            summary["total_income"] = item["total"]
+            summary["income_count"] = item["count"]
+        elif item["_id"] == "expense":
+            summary["total_expenses"] = item["total"]
+            summary["expense_count"] = item["count"]
+    
+    summary["net_balance"] = summary["total_income"] - summary["total_expenses"]
+    summary["net_amount"] = summary["net_balance"]  # Alias for frontend
+    summary["transaction_count"] = summary["income_count"] + summary["expense_count"]
+    
+    return summary
 
 @router.get("/{transaction_id}", response_model=TransactionResponse)
 async def get_transaction(
@@ -184,29 +224,3 @@ async def delete_transaction(
         )
     
     return {"message": "Transaction deleted successfully"}
-
-@router.get("/summary/overview")
-async def get_transaction_summary(
-    current_user: dict = Depends(get_current_user),
-    db: AsyncIOMotorClient = Depends(get_database)
-):
-    pipeline = [
-        {"$match": {"user_id": str(current_user["_id"])}},
-        {"$group": {
-            "_id": "$transaction_type",
-            "total": {"$sum": "$amount"},
-            "count": {"$sum": 1}
-        }}
-    ]
-    
-    summary = await db.transactions.aggregate(pipeline).to_list(None)
-    
-    income = next((item["total"] for item in summary if item["_id"] == "income"), 0)
-    expenses = next((item["total"] for item in summary if item["_id"] == "expense"), 0)
-    
-    return {
-        "total_income": income,
-        "total_expenses": expenses,
-        "net_amount": income - expenses,
-        "transaction_count": sum(item["count"] for item in summary)
-    }

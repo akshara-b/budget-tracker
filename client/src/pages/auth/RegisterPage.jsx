@@ -59,6 +59,7 @@ const RegisterPage = () => {
 
     try {
       await dispatch(register({
+        username: formData.email, // Use email as username
         full_name: formData.full_name,
         email: formData.email,
         password: formData.password
@@ -180,26 +181,6 @@ const RegisterPage = () => {
                 </button>
               </div>
             </div>
-          </div>
-
-          <div className="flex items-center">
-            <input
-              id="agree-terms"
-              name="agree-terms"
-              type="checkbox"
-              required
-              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-            />
-            <label htmlFor="agree-terms" className="ml-2 block text-sm text-gray-900">
-              I agree to the{' '}
-              <a href="#" className="text-primary-600 hover:text-primary-500">
-                Terms of Service
-              </a>{' '}
-              and{' '}
-              <a href="#" className="text-primary-600 hover:text-primary-500">
-                Privacy Policy
-              </a>
-            </label>
           </div>
 
           <div>

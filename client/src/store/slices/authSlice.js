@@ -4,7 +4,7 @@ import { authService } from '../../services/authService.js'
 const initialState = {
   user: null,
   isAuthenticated: false,
-  isLoading: false,
+  isLoading: !!localStorage.getItem('token'), // Start loading if token exists
   error: null,
 }
 
@@ -14,7 +14,10 @@ export const login = createAsyncThunk(
     try {
       const response = await authService.login(credentials)
       localStorage.setItem('token', response.access_token)
-      return response
+      
+      // Fetch user data after successful login
+      const userData = await authService.getCurrentUser()
+      return { ...response, user: userData }
     } catch (error) {
       return rejectWithValue(error.response?.data?.detail || 'Login failed')
     }
@@ -27,7 +30,10 @@ export const register = createAsyncThunk(
     try {
       const response = await authService.register(userData)
       localStorage.setItem('token', response.access_token)
-      return response
+      
+      // Fetch user data after successful registration
+      const userResponse = await authService.getCurrentUser()
+      return { ...response, user: userResponse }
     } catch (error) {
       return rejectWithValue(error.response?.data?.detail || 'Registration failed')
     }

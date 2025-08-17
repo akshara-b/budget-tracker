@@ -7,8 +7,9 @@ const BudgetForm = ({ onSubmit, onCancel, budget }) => {
   
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     defaultValues: budget || {
+      name: '',
       category: '',
-      limit: 0,
+      amount: 0,
       period: 'monthly',
       description: ''
     }
@@ -36,7 +37,12 @@ const BudgetForm = ({ onSubmit, onCancel, budget }) => {
   const handleFormSubmit = async (data) => {
     setIsSubmitting(true)
     try {
-      await onSubmit(data)
+      // Add start_date to the data
+      const budgetData = {
+        ...data,
+        start_date: new Date().toISOString()
+      }
+      await onSubmit(budgetData)
       reset()
     } catch (error) {
       console.error('Form submission error:', error)
@@ -46,8 +52,8 @@ const BudgetForm = ({ onSubmit, onCancel, budget }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/20 flex items-start justify-center z-[9999] p-4 pt-8 overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-y-auto border border-gray-200">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
@@ -63,6 +69,20 @@ const BudgetForm = ({ onSubmit, onCancel, budget }) => {
 
         {/* Form */}
         <form onSubmit={handleSubmit(handleFormSubmit)} className="p-6 space-y-4">
+          {/* Name */}
+          <div>
+            <label className="form-label">Budget Name *</label>
+            <input
+              type="text"
+              {...register('name', { required: 'Budget name is required' })}
+              className={`input-field ${errors.name ? 'border-red-500' : ''}`}
+              placeholder="e.g., Monthly Food Budget"
+            />
+            {errors.name && (
+              <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+            )}
+          </div>
+
           {/* Category */}
           <div>
             <label className="form-label">Category *</label>
@@ -82,22 +102,22 @@ const BudgetForm = ({ onSubmit, onCancel, budget }) => {
             )}
           </div>
 
-          {/* Limit */}
+          {/* Amount */}
           <div>
-            <label className="form-label">Budget Limit *</label>
+            <label className="form-label">Budget Amount *</label>
             <input
               type="number"
               step="0.01"
               min="0"
-              {...register('limit', { 
-                required: 'Budget limit is required',
-                min: { value: 0.01, message: 'Budget limit must be greater than 0' }
+              {...register('amount', { 
+                required: 'Budget amount is required',
+                min: { value: 0.01, message: 'Budget amount must be greater than 0' }
               })}
-              className={`input-field ${errors.limit ? 'border-red-500' : ''}`}
+              className={`input-field ${errors.amount ? 'border-red-500' : ''}`}
               placeholder="0.00"
             />
-            {errors.limit && (
-              <p className="text-red-500 text-sm mt-1">{errors.limit.message}</p>
+            {errors.amount && (
+              <p className="text-red-500 text-sm mt-1">{errors.amount.message}</p>
             )}
           </div>
 

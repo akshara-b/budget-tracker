@@ -22,6 +22,15 @@ const AIInsightsPage = () => {
     dispatch(fetchSpendingForecast())
   }, [dispatch])
 
+  // Debug logging
+  console.log('AI Insights Page State:', {
+    anomalies,
+    patterns,
+    recommendations,
+    forecasts,
+    isLoading
+  })
+
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Brain },
     { id: 'anomalies', label: 'Anomalies', icon: AlertTriangle },
@@ -33,16 +42,17 @@ const AIInsightsPage = () => {
   const renderOverview = () => (
     <div className="space-y-6">
       {/* AI Summary */}
-      <div className="card bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+      <div className="card-premium border-none">
         <div className="flex items-center space-x-4">
-          <div className="p-3 bg-blue-100 rounded-lg">
-            <Brain className="w-8 h-8 text-blue-600" />
+          <div className="p-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+            <Brain className="w-8 h-8 text-white" />
           </div>
           <div>
-            <h3 className="text-xl font-semibold text-gray-900">AI Financial Assistant</h3>
+            <h3 className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              AI Financial Assistant
+            </h3>
             <p className="text-gray-600">
-              Your personal AI has analyzed {anomalies?.length || 0} spending patterns and identified 
-              {anomalies?.length || 0} anomalies to help you make better financial decisions.
+              Your personal AI has analyzed {anomalies?.length || 0} spending patterns and identified {anomalies?.length || 0} anomalies to help you make better financial decisions.
             </p>
           </div>
         </div>
@@ -50,33 +60,33 @@ const AIInsightsPage = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="card text-center">
-          <div className="p-3 bg-red-100 rounded-lg mx-auto mb-3">
-            <AlertTriangle className="w-6 h-6 text-red-600" />
+        <div className="stat-card text-center group">
+          <div className="p-4 bg-gradient-to-br from-red-400 to-red-600 rounded-xl mx-auto mb-3 group-hover:shadow-lg transition-all">
+            <AlertTriangle className="w-6 h-6 text-white" />
           </div>
-          <h4 className="text-lg font-semibold text-gray-900">{anomalies?.length || 0}</h4>
+          <h4 className="text-2xl font-bold text-gray-900">{anomalies?.length || 0}</h4>
           <p className="text-sm text-gray-600">Anomalies Detected</p>
         </div>
 
-        <div className="card text-center">
-          <div className="p-3 bg-blue-100 rounded-lg mx-auto mb-3">
-            <BarChart3 className="w-6 h-6 text-blue-600" />
+        <div className="stat-card text-center group">
+          <div className="p-4 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl mx-auto mb-3 group-hover:shadow-lg transition-all">
+            <BarChart3 className="w-6 h-6 text-white" />
           </div>
-          <h4 className="text-lg font-semibold text-gray-900">{patterns?.length || 0}</h4>
+          <h4 className="text-2xl font-bold text-gray-900">{patterns?.length || 0}</h4>
           <p className="text-sm text-gray-600">Patterns Identified</p>
         </div>
 
-        <div className="card text-center">
-          <div className="p-3 bg-green-100 rounded-lg mx-auto mb-3">
-            <Target className="w-6 h-6 text-green-600" />
+        <div className="stat-card text-center group">
+          <div className="p-4 bg-gradient-to-br from-green-400 to-green-600 rounded-xl mx-auto mb-3 group-hover:shadow-lg transition-all">
+            <Target className="w-6 h-6 text-white" />
           </div>
-          <h4 className="text-lg font-semibold text-gray-900">{recommendations?.length || 0}</h4>
+          <h4 className="text-2xl font-bold text-gray-900">{recommendations?.length || 0}</h4>
           <p className="text-sm text-gray-600">Recommendations</p>
         </div>
 
-        <div className="card text-center">
-          <div className="p-3 bg-purple-100 rounded-lg mx-auto mb-3">
-            <TrendingUp className="w-6 h-6 text-purple-600" />
+        <div className="stat-card text-center group">
+          <div className="p-4 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl mx-auto mb-3 group-hover:shadow-lg transition-all">
+            <TrendingUp className="w-6 h-6 text-white" />
           </div>
           <h4 className="text-lg font-semibold text-gray-900">{forecasts?.length || 0}</h4>
           <p className="text-sm text-gray-600">Forecasts Generated</p>
@@ -284,29 +294,31 @@ const AIInsightsPage = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">AI Insights</h1>
-        <p className="text-gray-600">Discover intelligent insights about your financial behavior</p>
+      <div className="card-gradient text-center">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+          AI Financial Insights
+        </h1>
+        <p className="text-gray-600 mt-2">Discover intelligent insights about your financial behavior powered by advanced AI</p>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
+      <div className="bg-white/60 backdrop-blur-sm rounded-xl shadow-lg border border-white/30">
+        <nav className="flex space-x-1 p-2">
           {tabs.map((tab) => {
             const Icon = tab.icon
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+                className={`flex-1 py-3 px-4 font-medium text-sm flex items-center justify-center space-x-2 rounded-lg transition-all duration-200 ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg transform scale-105'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-5 h-5" />
                 <span>{tab.label}</span>
               </button>
             )

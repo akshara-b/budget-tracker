@@ -1,5 +1,6 @@
 import React from 'react'
-import { TrendingUp, TrendingDown, DollarSign, CreditCard, PiggyBank, BarChart3 } from 'lucide-react'
+import { TrendingUp, TrendingDown, Coins, CreditCard, PiggyBank, BarChart3 } from 'lucide-react'
+import { formatCurrency } from '../../utils/currency.js'
 
 const StatCard = ({ title, value, change, changeType, icon }) => {
   const getIcon = () => {
@@ -9,7 +10,7 @@ const StatCard = ({ title, value, change, changeType, icon }) => {
       case 'expense':
         return <TrendingDown className="w-6 h-6 text-red-600" />
       case 'net':
-        return <DollarSign className="w-6 h-6 text-blue-600" />
+        return <Coins className="w-6 h-6 text-blue-600" />
       case 'transaction':
         return <CreditCard className="w-6 h-6 text-purple-600" />
       case 'savings':
@@ -21,10 +22,7 @@ const StatCard = ({ title, value, change, changeType, icon }) => {
 
   const formatValue = (val) => {
     if (typeof val === 'number') {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(val)
+      return formatCurrency(val)
     }
     return val
   }
